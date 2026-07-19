@@ -1,0 +1,11 @@
+{
+  "email": ["you", "example", "com"],
+  "emailDisplay": "you@example.com",
+  "github": {
+    "user": "yourname",
+    "url": "https://github.com/yourname"
+  },
+  "phone": "+86 138-0000-0000",
+  "phoneHref": "+8613800000000",
+  "location": "中国 · 某城市"
+}

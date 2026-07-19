@@ -1,8 +1,30 @@
-"use client";
+import fs from "fs";
+import path from "path";
 
-import { contact, buildEmail } from "@/content/about";
+// 强制动态渲染，确保每次请求都重新读取 JSON 文件（热更新 / 重启后生效）
+export const dynamic = "force-dynamic";
+
+interface ContactData {
+  email: string[];
+  emailDisplay: string;
+  github: { user: string; url: string };
+  phone: string;
+  phoneHref: string;
+  location: string;
+}
+
+function loadContact(): ContactData {
+  const filePath = path.join(process.cwd(), "content", "contact.json");
+  const raw = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(raw) as ContactData;
+}
+
+function buildEmail(parts: string[]): string {
+  return `${parts[0]}@${parts[1]}.${parts[2]}`;
+}
 
 export default function ContactPage() {
+  const contact = loadContact();
   const githubName = "github.com/" + contact.github.user;
 
   const rows = [
@@ -35,7 +57,6 @@ export default function ContactPage() {
       label: "地址",
       icon: "⬡",
       value: contact.location,
-      // 地址不提供链接,留作展示;若想跳地图可换 href
     },
   ];
 
@@ -49,7 +70,7 @@ export default function ContactPage() {
           联系我
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-7 text-zinc-400">
-          想聊聊项目、合作或者只是打个招呼,从下面随便挑一个方式。
+          想聊聊项目、合作或者只是打个招呼，从下面随便挑一个方式。
         </p>
       </section>
 
