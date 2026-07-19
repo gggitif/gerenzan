@@ -5,7 +5,7 @@ services:
     container_name: gerenzhan
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "1988:1988"
     # content 挂到持久物理盘:上传的新 md 落到宿主机,不随容器重启丢失
     volumes:
       - /mnt/sata2-4/gerenzhan-content:/app/content
