@@ -60,6 +60,49 @@ export default function UploadPage() {
   const [result, setResult] = useState<{ slug?: string; error?: string }>({});
   const [copied, setCopied] = useState(false);
 
+  // ---------- 管理已有内容 ----------
+  const [contents, setContents] = useState<Record<ContentType, { slug: string; title: string }[]>>({
+    projects: [],
+    posts: [],
+    bookmarks: [],
+  });
+  const [manageOpen, setManageOpen] = useState(false);
+  const [delTarget, setDelTarget] = useState<{ type: ContentType; slug: string; title: string } | null>(null);
+
+  const fetchContentList = async () => {
+    const result: Record<ContentType, { slug: string; title: string }[]> = {
+      projects: [],
+      posts: [],
+      bookmarks: [],
+    };
+    for (const t of Object.keys(TYPE_LABEL) as ContentType[]) {
+      try {
+        const res = await fetch(`/api/content?type=${t}`, {
+          headers: { "x-upload-token": uploadToken },
+        });
+        if (res.ok) result[t] = await res.json();
+      } catch {}
+    }
+    setContents(result);
+  };
+
+  const doDelete = async () => {
+    if (!delTarget) return;
+    try {
+      const res = await fetch(
+        `/api/content?type=${delTarget.type}&slug=${delTarget.slug}`,
+        { method: "DELETE", headers: { "x-upload-token": uploadToken } }
+      );
+      if (res.ok) {
+        setContents((prev) => ({
+          ...prev,
+          [delTarget.type]: prev[delTarget.type].filter((c) => c.slug !== delTarget.slug),
+        }));
+      }
+    } catch {}
+    setDelTarget(null);
+  };
+
   // 切换类型时清空部分字段
   const switchType = (t: ContentType) => {
     if (t !== type) {
@@ -424,6 +467,87 @@ export default function UploadPage() {
           </pre>
         </div>
       </section>
+
+      {/* 管理已有内容 */}
+      <section className="pb-20">
+        <button
+          onClick={() => { setManageOpen(!manageOpen); if (!manageOpen) fetchContentList(); }}
+          className="font-display inline-flex items-center gap-2 rounded-full border border-white/[.1] px-5 py-2 text-xs uppercase tracking-wider text-zinc-400 transition-colors hover:bg-white/[.04] hover:text-zinc-200"
+        >
+          {manageOpen ? "收起" : "管理已有内容"} ▾
+        </button>
+
+        {manageOpen && (
+          <div className="mt-4 space-y-6">
+            {(Object.keys(TYPE_LABEL) as ContentType[]).map((t) => (
+              <div key={t}>
+                <p className="font-display mb-2 text-xs uppercase tracking-widest text-zinc-500">
+                  {TYPE_LABEL[t]} ({contents[t].length})
+                </p>
+                {contents[t].length === 0 ? (
+                  <p className="text-xs text-zinc-600">暂无内容</p>
+                ) : (
+                  <ul className="divide-y divide-white/[.06] rounded-xl border border-white/[.08] bg-white/[.01]">
+                    {contents[t].map((c) => (
+                      <li
+                        key={c.slug}
+                        className="flex items-center justify-between px-4 py-2.5"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="font-mono text-[10px] text-zinc-600 shrink-0">
+                            {c.slug}
+                          </span>
+                          <span className="text-sm text-zinc-300 truncate">
+                            {c.title}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setDelTarget({ type: t, slug: c.slug, title: c.title })}
+                          className="font-display shrink-0 rounded border border-red-500/20 px-2.5 py-1 text-[10px] uppercase tracking-wider text-red-400 transition-all hover:border-red-500/50 hover:bg-red-500/10"
+                        >
+                          删除
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 删除确认弹窗 */}
+      {delTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border border-white/[.1] bg-zinc-900 p-6 shadow-2xl">
+            <p className="font-display text-sm font-semibold text-foreground">
+              确认删除
+            </p>
+            <p className="mt-2 text-sm text-zinc-400">
+              将永久删除 <span className="text-[var(--accent)]">{delTarget.title}</span>
+              <br />
+              <code className="text-xs text-zinc-600">
+                content/{delTarget.type}/{delTarget.slug}.md
+              </code>
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={doDelete}
+                className="font-display rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2 text-sm tracking-wider text-red-300 transition-all hover:bg-red-500/20"
+              >
+                确认删除
+              </button>
+              <button
+                onClick={() => setDelTarget(null)}
+                className="font-display rounded-full border border-white/[.1] px-5 py-2 text-sm tracking-wider text-zinc-400 transition-colors hover:bg-white/[.04]"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
