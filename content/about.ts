@@ -20,6 +20,10 @@ export const contact = {
 // 改成你自己的随机串。容器读这个值;前端从公共配置取(见下)。
 export const uploadToken = "change-this-to-a-long-random-string";
 
+// 上传页入口密码:访问 /upload 需要先输入这个密码才能看到表单。
+// 改成你自己的。跟 token 可以用不同的值。
+export const uploadPassword = "admin123";
+
 // 运行时拼邮箱,避免在 HTML 源码里出现完整 @ 字符串
 export function buildEmail(parts: string[]): string {
   return `${parts[0]}@${parts[1]}.${parts[2]}`;
