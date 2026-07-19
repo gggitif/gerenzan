@@ -3,15 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { uploadToken } from "@/content/about";
 
-// 生成文件名安全的 slug:中文取拼音不可靠,这里用户没输入 slug 就用时间戳,
-// 若给了英文名用其小写化。
+// 生成纯 ASCII 的 slug(中文全去掉,避免 URL 编码问题)
 function slugify(title: string): string {
   const ascii = title
     .toLowerCase()
-    .replace(/[^a-z0-9一-鿿]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^\x00-\x7F]+/g, "")    // 去除非 ASCII(含中文)
+    .replace(/[^a-z0-9]+/g, "-")      // 非字母数字变连字符
+    .replace(/^-+|-+$/g, "");         // 去头尾连字符
   if (ascii && /^[a-z]/.test(ascii)) return ascii;
-  // 标题以中文/数字开头时,用时间戳保证唯一
+  // 纯中文/数字开头 → 时间戳 slug
   return "p-" + new Date().toISOString().slice(0, 10).replaceAll("-", "");
 }
 
