@@ -2,7 +2,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
+# build 需要 devDependencies(@tailwindcss/postcss, typescript 等)
+RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
